@@ -9,6 +9,13 @@ This project integrates Google Maps with Places API and Google OAuth login in a 
 - Fetch nearby hospitals using Google Places API within 5km of radius
 - Show hospital markers on the map
 
+## Screenshots
+![Home Screen](home-image.png)
+
+![Map](map-image.png)
+
+![Hospital List](hospital-list-image.png)
+---
 ## Tech Stack
 
 - React (with TypeScript)

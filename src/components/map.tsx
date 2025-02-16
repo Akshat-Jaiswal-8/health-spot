@@ -5,7 +5,7 @@ import {
   InfoWindow,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import PlaceResult = google.maps.places.PlaceResult;
 import PlacesServiceStatus = google.maps.places.PlacesServiceStatus;
@@ -39,15 +39,59 @@ function MapComponent() {
   const [selectedHospital, setSelectedHospital] = useState<PlaceResult | null>(
     null,
   );
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   const [directions, setDirections] =
     useState<google.maps.DirectionsResult | null>(null);
+
+  const fetchHospitals = useCallback(
+    (map: google.maps.Map, location: UserLocation) => {
+      if (!map || !location) return;
+      if (!window.google.maps.places) {
+        toast.error("Places API not loaded!");
+        return;
+      }
+
+      const service = new window.google.maps.places.PlacesService(map);
+
+      // Fetch hospitals within 5km radius
+      const request = {
+        location: new window.google.maps.LatLng(location.lat, location.lng),
+        radius: 5000,
+        type: "hospital",
+      };
+
+      service?.nearbySearch(
+        request,
+        (results: PlaceResult[] | null, status: PlacesServiceStatus) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+            setHospitals(results ? results : null);
+          } else {
+            toast.error("Error fetching hospitals:", { description: status });
+            console.error("Error fetching hospitals:", status);
+          }
+        },
+      );
+    },
+    [],
+  );
+
+  const onMapLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMapInstance(map);
+      if (userLocation) {
+        fetchHospitals(map, userLocation);
+      }
+    },
+    [fetchHospitals, userLocation],
+  );
 
   useEffect(() => {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser.");
       return;
     }
+    if (!user) toast.error("Login first!");
     if (user) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -64,37 +108,11 @@ function MapComponent() {
     }
   }, [user]);
 
-  const fetchHospitals = (map: google.maps.Map) => {
-    if (!map || !userLocation) return;
-    if (!window.google.maps.places) {
-      toast.error("Places API not loaded!");
-      return;
+  useEffect(() => {
+    if (mapInstance && userLocation) {
+      fetchHospitals(mapInstance, userLocation);
     }
-
-    const service = new window.google.maps.places.PlacesService(map);
-
-    //Fetching hospitals within 5km of radius.
-    const request = {
-      location: new window.google.maps.LatLng(
-        userLocation.lat,
-        userLocation.lng,
-      ),
-      radius: 5000,
-      type: "hospital",
-    };
-
-    service?.nearbySearch(
-      request,
-      (results: PlaceResult[] | null, status: PlacesServiceStatus) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          setHospitals(results ? results : null);
-        } else {
-          toast.error("Error fetching hospitals:", { description: status });
-          console.error("Error fetching hospitals:", status);
-        }
-      },
-    );
-  };
+  }, [userLocation, mapInstance, fetchHospitals]);
 
   return (
     <div className={"container mb-5 mt-[calc(var(--nav-height)+2rem)]"}>
@@ -119,7 +137,7 @@ function MapComponent() {
             mapContainerStyle={mapContainerStyle}
             zoom={12}
             center={userLocation ?? DEFAULT_CENTER}
-            onLoad={(map) => fetchHospitals(map)}
+            onLoad={onMapLoad}
           >
             {userLocation && <Marker position={userLocation} />}
 

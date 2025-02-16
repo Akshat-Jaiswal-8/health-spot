@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/avatar.tsx";
 import { ModeToggle } from "@/components/mode-toggle.tsx";
 import axios from "axios";
+import { Link } from "react-router";
 
 export const Navbar = (): React.JSX.Element => {
   const { user, logout, setUser } = useAuthStore((state) => state);
@@ -52,7 +53,7 @@ export const Navbar = (): React.JSX.Element => {
   return (
     <nav className={"max-h-[10vh] border-b border-dotted border-blue-800 p-4"}>
       <div className={"container flex items-center justify-between"}>
-        <div className={"flex items-center gap-x-4"}>
+        <Link to={"/"} className={"flex items-center gap-x-4"}>
           <img
             className={
               "rounded-full p-0.5 hover:shadow-xl hover:shadow-gray-100"
@@ -69,7 +70,7 @@ export const Navbar = (): React.JSX.Element => {
           >
             Health Spot
           </p>
-        </div>
+        </Link>
         <div className={"flex items-center gap-x-6"}>
           {!user ? (
             <Button

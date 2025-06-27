@@ -1,4 +1,4 @@
-# HealthSpot : https://ast-assignment-zeta.vercel.app/
+# HealthSpot
 
 This project integrates Google Maps with Places API and Google OAuth login in a React application. Users can sign in with Google, view their location on the map, and find nearby hospitals.
 
